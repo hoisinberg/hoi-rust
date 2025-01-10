@@ -62,6 +62,17 @@ impl<T: Ord> BTreeMultiSet<T> {
     prev_count
   }
 
+  /// Resets the occurrence count of the given element to 0.
+  pub fn remove_all(&mut self, element: &T) -> Option<usize> {
+    if let Some(count) = self.occurrence_count.get_mut(element) {
+      let prev_count = Some(*count);
+      self.occurrence_count.remove(element);
+      prev_count
+    } else {
+      None
+    }
+  }
+
   /// Resets the occurrence count of all elements to 0.
   pub fn clear(&mut self) {
     self.occurrence_count.clear()
@@ -150,6 +161,17 @@ impl<T: Hash + Eq> HashMultiSet<T> {
       }
     }
     prev_count
+  }
+
+  /// Resets the occurrence count of the given element to 0.
+  pub fn remove_all(&mut self, element: &T) -> Option<usize> {
+    if let Some(count) = self.occurrence_count.get_mut(element) {
+      let prev_count = Some(*count);
+      self.occurrence_count.remove(element);
+      prev_count
+    } else {
+      None
+    }
   }
 
   /// Resets the occurrence count of all elements to 0.
@@ -308,6 +330,20 @@ mod tests {
   }
 
   #[test]
+  fn btreemultiset_remove_all() {
+    let mut multiset = BTreeMultiSet::<String>::new();
+    let key1 = String::from("test1");
+    let key2 = String::from("test2");
+
+    multiset.insert(&key1, 7);
+    multiset.insert(&key2, 12);
+
+    assert_eq!(multiset.remove_all(&key1), Some(7));
+    assert_eq!(multiset.get_count(&key1), 0);
+    assert_eq!(multiset.get_count(&key2), 12);
+  }
+
+  #[test]
   fn btreemultiset_clear() {
     let mut multiset = BTreeMultiSet::<String>::new();
     let key1 = String::from("def");
@@ -454,6 +490,20 @@ mod tests {
 
     assert_eq!(multiset.get_count(&key1), 25);
     assert_eq!(multiset.get_count(&key2), 16);
+  }
+
+  #[test]
+  fn hashmultiset_remove_all() {
+    let mut multiset = HashMultiSet::<String>::new();
+    let key1 = String::from("test1");
+    let key2 = String::from("test2");
+
+    multiset.insert(&key1, 7);
+    multiset.insert(&key2, 12);
+
+    assert_eq!(multiset.remove_all(&key1), Some(7));
+    assert_eq!(multiset.get_count(&key1), 0);
+    assert_eq!(multiset.get_count(&key2), 12);
   }
 
   #[test]
