@@ -22,7 +22,7 @@ impl<T: Ord> BTreeMultiSet<T> {
     *self.occurrence_count.get(element).unwrap_or(&0)
   }
 
-  /// Increments the occurence count of the element by the given amount and returns the updated
+  /// Increments the occurrence count of the element by the given amount and returns the previous
   /// count. If this is the first time the element has been inserted and the intended count is
   /// positive, it will be cloned for internal tracking.
   pub fn insert(&mut self, element: &T, n: usize) -> usize
@@ -30,35 +30,36 @@ impl<T: Ord> BTreeMultiSet<T> {
     T: Clone,
   {
     if let Some(count) = self.occurrence_count.get_mut(element) {
+      let prev_count = *count;
       *count += n;
-      *count
+      prev_count
     } else {
       if n != 0 {
         self.occurrence_count.insert(element.clone(), n);
       }
-      n
+      0
     }
   }
 
   /// If the occurrence count of `element` is greater than or equal to `n`, reduces it by `n` and
-  /// returns the updated count. Otherwise, does nothing and returns None.
+  /// returns the previous count. Otherwise, does nothing and returns None.
   pub fn remove(&mut self, element: &T, n: usize) -> Option<usize> {
     if n == 0 {
       return Some(self.get_count(element));
     }
 
-    let mut updated_count: Option<usize> = None;
+    let mut prev_count: Option<usize> = None;
     if let Some(count) = self.occurrence_count.get_mut(element) {
       if *count >= n {
+        prev_count = Some(*count);
         *count -= n;
-        updated_count = Some(*count);
 
         if *count == 0 {
           self.occurrence_count.remove(element);
         }
       }
     }
-    updated_count
+    prev_count
   }
 
   /// Resets the occurrence count of all elements to 0.
@@ -111,7 +112,7 @@ impl<T: Hash + Eq> HashMultiSet<T> {
     *self.occurrence_count.get(element).unwrap_or(&0)
   }
 
-  /// Increments the occurence count of the element by the given amount and returns the updated
+  /// Increments the occurrence count of the element by the given amount and returns the previous
   /// count. If this is the first time the element has been inserted and the intended count is
   /// positive, it will be cloned for internal tracking.
   pub fn insert(&mut self, element: &T, n: usize) -> usize
@@ -119,35 +120,36 @@ impl<T: Hash + Eq> HashMultiSet<T> {
     T: Clone,
   {
     if let Some(count) = self.occurrence_count.get_mut(element) {
+      let prev_count = *count;
       *count += n;
-      *count
+      prev_count
     } else {
       if n != 0 {
         self.occurrence_count.insert(element.clone(), n);
       }
-      n
+      0
     }
   }
 
   /// If the occurrence count of `element` is greater than or equal to `n`, reduces it by `n` and
-  /// returns the updated count. Otherwise, does nothing and returns None.
+  /// returns the previous count. Otherwise, does nothing and returns None.
   pub fn remove(&mut self, element: &T, n: usize) -> Option<usize> {
     if n == 0 {
       return Some(self.get_count(element));
     }
 
-    let mut updated_count: Option<usize> = None;
+    let mut prev_count: Option<usize> = None;
     if let Some(count) = self.occurrence_count.get_mut(element) {
       if *count >= n {
+        prev_count = Some(*count);
         *count -= n;
-        updated_count = Some(*count);
 
         if *count == 0 {
           self.occurrence_count.remove(element);
         }
       }
     }
-    updated_count
+    prev_count
   }
 
   /// Resets the occurrence count of all elements to 0.
@@ -225,10 +227,10 @@ mod tests {
     let mut multiset = BTreeMultiSet::<String>::new();
     let key = String::from("test");
 
-    assert_eq!(multiset.insert(&key, 3), 3);
+    assert_eq!(multiset.insert(&key, 3), 0);
     assert_eq!(multiset.get_count(&key), 3);
 
-    assert_eq!(multiset.insert(&key, 4), 7);
+    assert_eq!(multiset.insert(&key, 4), 3);
     assert_eq!(multiset.get_count(&key), 7);
   }
 
@@ -260,7 +262,7 @@ mod tests {
 
     multiset.insert(&key, 10);
 
-    assert_eq!(multiset.remove(&key, 9), Some(1));
+    assert_eq!(multiset.remove(&key, 9), Some(10));
     assert_eq!(multiset.get_count(&key), 1);
   }
 
@@ -295,11 +297,11 @@ mod tests {
     let key1 = String::from("test1");
     let key2 = String::from("test2");
 
-    assert_eq!(multiset.insert(&key1, 10), 10);
-    assert_eq!(multiset.insert(&key2, 19), 19);
+    assert_eq!(multiset.insert(&key1, 10), 0);
+    assert_eq!(multiset.insert(&key2, 19), 0);
 
-    assert_eq!(multiset.insert(&key1, 15), 25);
-    assert_eq!(multiset.remove(&key2, 3), Some(16));
+    assert_eq!(multiset.insert(&key1, 15), 10);
+    assert_eq!(multiset.remove(&key2, 3), Some(19));
 
     assert_eq!(multiset.get_count(&key1), 25);
     assert_eq!(multiset.get_count(&key2), 16);
@@ -374,10 +376,10 @@ mod tests {
     let mut multiset = HashMultiSet::<String>::new();
     let key = String::from("test");
 
-    assert_eq!(multiset.insert(&key, 3), 3);
+    assert_eq!(multiset.insert(&key, 3), 0);
     assert_eq!(multiset.get_count(&key), 3);
 
-    assert_eq!(multiset.insert(&key, 4), 7);
+    assert_eq!(multiset.insert(&key, 4), 3);
     assert_eq!(multiset.get_count(&key), 7);
   }
 
@@ -409,7 +411,7 @@ mod tests {
 
     multiset.insert(&key, 10);
 
-    assert_eq!(multiset.remove(&key, 9), Some(1));
+    assert_eq!(multiset.remove(&key, 9), Some(10));
     assert_eq!(multiset.get_count(&key), 1);
   }
 
@@ -444,11 +446,11 @@ mod tests {
     let key1 = String::from("test1");
     let key2 = String::from("test2");
 
-    assert_eq!(multiset.insert(&key1, 10), 10);
-    assert_eq!(multiset.insert(&key2, 19), 19);
+    assert_eq!(multiset.insert(&key1, 10), 0);
+    assert_eq!(multiset.insert(&key2, 19), 0);
 
-    assert_eq!(multiset.insert(&key1, 15), 25);
-    assert_eq!(multiset.remove(&key2, 3), Some(16));
+    assert_eq!(multiset.insert(&key1, 15), 10);
+    assert_eq!(multiset.remove(&key2, 3), Some(19));
 
     assert_eq!(multiset.get_count(&key1), 25);
     assert_eq!(multiset.get_count(&key2), 16);
