@@ -72,7 +72,7 @@ impl<T: Ord> BTreeMultiSet<T> {
   }
 
   // An iterator visiting all (element, occurrence_count) pairs in ascending key order.
-  pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&T, usize)> + 'a {
+  pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a T, usize)> + 'a {
     BTreeMultiSetIter {
       delegate: self.occurrence_count.iter(),
     }
@@ -161,7 +161,7 @@ impl<T: Hash + Eq> HashMultiSet<T> {
   }
 
   // An iterator visiting all (element, occurrence_count) pairs.
-  pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&T, usize)> + 'a {
+  pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a T, usize)> + 'a {
     HashMultiSetIter {
       delegate: self.occurrence_count.iter(),
     }
